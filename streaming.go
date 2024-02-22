@@ -71,28 +71,3 @@ func do(in <-chan []byte) *io.PipeReader {
 func merge(bodies ...io.Reader) io.Reader {
 	return io.MultiReader(bodies...)
 }
-
-// func pipe(in io.Reader, size int) *io.PipeReader {
-// 	reader, writer := io.Pipe()
-
-// 	mw := multipart.NewWriter(writer)
-
-// 	go func() {
-// 		for {
-// 			buf := make([]byte, size)
-// 			n, _ := in.Read(buf)
-// 			buf = buf[:n]
-
-// 			if n == 0 {
-// 				break
-// 			}
-
-// 			mw.WriteField("fieldname", string(buf))
-// 		}
-
-// 		writer.Close()
-// 		mw.Close()
-// 	}()
-
-// 	return reader
-// }
