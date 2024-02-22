@@ -68,6 +68,6 @@ func do(in <-chan []byte) *io.PipeReader {
 	return reader
 }
 
-func merge(bodies ...io.Reader) io.Reader {
-	return io.MultiReader(bodies...)
+func merge(parts ...io.Reader) io.Reader {
+	return io.MultiReader(parts...)
 }
