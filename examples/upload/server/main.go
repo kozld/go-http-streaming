@@ -19,29 +19,26 @@ func upload(w http.ResponseWriter, req *http.Request) {
 }
 
 func processStream(r *http.Request, w http.ResponseWriter) {
-	scanner := bufio.NewScanner(r.Body)
 	defer r.Body.Close()
 
-	numBytes, numChunks := int64(0), int64(0)
+	reader := bufio.NewReader(r.Body)
 
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		//log.Println("Received line:", string(line))
+	data := make([]byte, 32<<20)
+	numBytes := int64(0)
 
-		numBytes += int64(len(line))
-		numChunks += 1
+	for {
+		n, err := reader.Read(data)
+		if err != nil {
+			break
+		}
+
+		numBytes += int64(n)
 	}
 
-	if err := scanner.Err(); err != nil {
-		log.Println("Error reading stream:", err)
-		http.Error(w, "Error reading stream", http.StatusInternalServerError)
-	}
-
-	log.Println("Bytes:", numBytes, "Chunks:", numChunks)
+	log.Println("Bytes:", numBytes)
 }
 
 func main() {
 	http.HandleFunc("/", upload)
-
 	http.ListenAndServe(":9094", nil)
 }

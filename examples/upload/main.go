@@ -6,12 +6,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/kozld/go-http-streaming/streaming.go"
+	"github.com/kozld/go-http-streaming/client.go"
 )
 
 const (
 	endpoint = "http://localhost:9094"
-	filePath = "examples/upload/static/book.txt"
+	filePath = "examples/upload/static/10GB.bin"
 )
 
 func main() {
@@ -29,7 +29,7 @@ func main() {
 	log.Printf("Filename: %s; Size: %d\n", fileInfo.Name(), fileInfo.Size())
 
 	startTime := time.Now()
-	err = streaming.Stream(http.MethodPost, endpoint, file)
+	err = client.Stream(http.MethodPost, endpoint, file)
 	if err != nil {
 		log.Fatalf("got error: %v", err)
 	}
