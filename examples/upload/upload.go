@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	endpoint = "http://localhost:9094"
-	filePath = "examples/upload/static/book.txt"
+	endpoint = "http://localhost:3000"
+	filePath = "examples/upload/payload/book.txt"
 )
 
 func main() {

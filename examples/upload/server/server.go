@@ -7,6 +7,10 @@ import (
 	"net/http"
 )
 
+const (
+	port = "3000"
+)
+
 func upload(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -15,7 +19,7 @@ func upload(w http.ResponseWriter, req *http.Request) {
 
 	processStream(req, w)
 
-	fmt.Fprintf(w, "Upload successful")
+	log.Println("Upload successful")
 }
 
 func processStream(r *http.Request, w http.ResponseWriter) {
@@ -37,10 +41,10 @@ func processStream(r *http.Request, w http.ResponseWriter) {
 		numBytes += int64(n)
 	}
 
-	log.Println("Bytes:", numBytes)
+	log.Printf("Recieved bytes: %d\n", numBytes)
 }
 
 func main() {
 	http.HandleFunc("/", upload)
-	http.ListenAndServe(":9094", nil)
+	http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 }

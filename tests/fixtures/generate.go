@@ -2,6 +2,7 @@ package fixtures
 
 import (
 	"bufio"
+	"io"
 	"os"
 )
 
@@ -9,12 +10,12 @@ const (
 	N = 1000
 )
 
-func Generate(filepath string) error {
+func Generate(filepath string) (*os.File, error) {
 	file, err := os.Create(filepath)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer file.Close()
+
 	writer := bufio.NewWriter(file)
 
 	for i := 0; i < N; i += 1 {
@@ -29,5 +30,7 @@ func Generate(filepath string) error {
 			го черепа и останется при вас навеки». — Федор Дост
 			оевский, «Идиот»`)
 	}
-	return err
+
+	_, err = file.Seek(0, io.SeekStart)
+	return file, err
 }

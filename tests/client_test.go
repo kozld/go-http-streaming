@@ -2,7 +2,6 @@ package client_test
 
 import (
 	"mime/multipart"
-	"os"
 	"testing"
 
 	"github.com/kozld/go-http-streaming/client.go"
@@ -10,17 +9,14 @@ import (
 )
 
 const (
-	fixtureTestRead  = "fixtures/test_read.txt"
-	fixtureTestDo    = "fixtures/test_do.txt"
-	fixtureTestMerge = "fixtures/test_merge.txt"
+	fixtureTestRead = "fixtures/test_read.txt"
+	fixtureTestDo   = "fixtures/test_do.txt"
 
 	batchSize = 200 * 1024
 )
 
 func TestRead(t *testing.T) {
-	fixtures.Generate(fixtureTestRead)
-
-	file, err := os.Open(fixtureTestRead)
+	file, err := fixtures.Generate(fixtureTestRead)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -43,9 +39,7 @@ func TestRead(t *testing.T) {
 }
 
 func TestDo(t *testing.T) {
-	fixtures.Generate(fixtureTestDo)
-
-	file, err := os.Open(fixtureTestDo)
+	file, err := fixtures.Generate(fixtureTestDo)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -66,8 +60,8 @@ func TestDo(t *testing.T) {
 			break
 		}
 
-		fhs := form.File["file"]
-		file, _ := fhs[0].Open()
+		header := form.File["file"]
+		file, _ := header[0].Open()
 
 		data := make([]byte, 32<<20)
 		for {
