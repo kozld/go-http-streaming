@@ -11,7 +11,7 @@ import (
 
 const (
 	endpoint = "http://localhost:9094"
-	filePath = "examples/upload/static/10GB.bin"
+	filePath = "examples/upload/static/book.txt"
 )
 
 func main() {
@@ -30,10 +30,11 @@ func main() {
 
 	startTime := time.Now()
 	err = client.Stream(http.MethodPost, endpoint, file)
+	endTime := time.Now()
+
 	if err != nil {
 		log.Fatalf("got error: %v", err)
 	}
-	endTime := time.Now()
 
 	executionTime := endTime.Sub(startTime)
 	log.Printf("Upload completed in %v\n", executionTime)

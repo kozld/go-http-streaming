@@ -32,6 +32,8 @@ func processStream(r *http.Request, w http.ResponseWriter) {
 			break
 		}
 
+		// fmt.Println(string(data[:n]))
+
 		numBytes += int64(n)
 	}
 
