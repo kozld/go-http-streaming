@@ -1,81 +1,147 @@
 package client
 
 import (
-	"bufio"
+	"errors"
 	"io"
 	"mime/multipart"
 	"net/http"
 )
 
-const (
-	Boundary     = "---XXX---"
-	BatchSize    = 500 * 1024
-	WorkersCount = 100
-)
+type (
+	Client struct {
+		http   HTTPClient
+		method string
+		url    string
 
-func Stream(method string, url string, in io.Reader) error {
-	ch := Read(in, BatchSize)
+		pr *io.PipeReader
+		pw *io.PipeWriter
 
-	parts := make([]io.Reader, 0, WorkersCount)
-	for i := 0; i < WorkersCount; i += 1 {
-		parts = append(parts, Do(ch))
+		chErr  chan error
+		chResp chan *http.Response
+
+		closed bool
 	}
 
-	body := Merge(parts...)
+	Opt func(c *Client)
 
-	req, err := http.NewRequest(method, url, body)
+	HTTPClient interface {
+		Do(req *http.Request) (*http.Response, error)
+	}
+)
+
+const (
+	Boundary = "---XXX---"
+)
+
+var (
+	errConnectionClosed = errors.New("error: connection closed")
+)
+
+func New(method string, url string, opts ...Opt) *Client {
+	c := &Client{
+		method: method,
+		url:    url,
+		chErr:  make(chan error),
+		chResp: make(chan *http.Response),
+	}
+
+	c.pr, c.pw = io.Pipe()
+
+	for _, opt := range DefaultOpts() {
+		opt(c)
+	}
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	go c.handleStream()
+
+	return c
+}
+
+func DefaultOpts() []Opt {
+	return []Opt{
+		WithHttpClient(&http.Client{}),
+	}
+}
+
+// WithHttpClient - Allows set custom HTTP client for testing purposes
+func WithHttpClient(client HTTPClient) Opt {
+	return func(c *Client) {
+		c.http = client
+	}
+}
+
+// Send - Sends data in multipart/form-data format,
+// after sending, closes the HTTP connection (sending an EOF signal) and returns *http.Response
+func (c *Client) Send(r io.Reader) (*http.Response, error) {
+	err := c.writeFrom(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.close()
+}
+
+// SendUnclose - Sends data in multipart/form-data format,
+// after sending the HTTP connection remains open
+func (c *Client) SendUnclose(r io.Reader) error {
+	return c.writeFrom(r)
+}
+
+func (c *Client) writeFrom(r io.Reader) error {
+	mw := multipart.NewWriter(c.pw)
+	mw.SetBoundary(Boundary)
+
+	w, err := mw.CreateFormFile("file", "file")
 	if err != nil {
 		return err
 	}
 
-	client := &http.Client{}
-	_, err = client.Do(req)
+	_, err = io.Copy(w, r)
+	if err != nil {
+		return err
+	}
 
-	return err
+	return mw.Close()
 }
 
-func Read(in io.Reader, size int) <-chan []byte {
-	out := make(chan []byte)
+// Close - Closes the current HTTP connection (sending an EOF signal) and returns http.Response
+func (c *Client) Close() (*http.Response, error) {
+	return c.close()
+}
 
-	data := make([]byte, size)
-	reader := bufio.NewReader(in)
+func (c *Client) handleStream() {
+	for {
+		req, _ := http.NewRequest(c.method, c.url, c.pr)
+		resp, err := c.http.Do(req)
 
-	go func() {
-		for {
-			n, err := reader.Read(data)
-			if err != nil {
-				break
-			}
-
-			out <- data[:n]
+		if !c.closed {
+			continue
 		}
 
-		close(out)
-	}()
-
-	return out
-}
-
-func Do(in <-chan []byte) io.Reader {
-	reader, writer := io.Pipe()
-
-	go func() {
-		for part := range in {
-			w := multipart.NewWriter(writer)
-			w.SetBoundary(Boundary)
-
-			file, _ := w.CreateFormFile("file", "file")
-			file.Write(part)
-
-			w.Close()
+		if err != nil {
+			c.chErr <- err
+		} else {
+			c.chResp <- resp
 		}
 
-		writer.Close()
-	}()
-
-	return reader
+		c.closed = false
+	}
 }
 
-func Merge(parts ...io.Reader) io.Reader {
-	return io.MultiReader(parts...)
+func (c *Client) close() (*http.Response, error) {
+	if c.closed {
+		return nil, errConnectionClosed
+	}
+
+	c.closed = true
+	c.pw.Close()
+
+	select {
+	case resp := <-c.chResp:
+		return resp, nil
+	case err := <-c.chErr:
+		return nil, err
+	}
 }

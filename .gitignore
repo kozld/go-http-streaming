@@ -1,2 +1,3 @@
+.vscode
 .DS_Store
-examples/upload/payload/10GB.bin
+payload/10GB.bin

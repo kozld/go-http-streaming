@@ -1,14 +1,13 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"net/http"
 )
 
 const (
-	port = "3000"
+	port = 3000
 )
 
 func upload(w http.ResponseWriter, req *http.Request) {
@@ -25,26 +24,25 @@ func upload(w http.ResponseWriter, req *http.Request) {
 func processStream(r *http.Request, w http.ResponseWriter) {
 	defer r.Body.Close()
 
-	reader := bufio.NewReader(r.Body)
-
 	data := make([]byte, 32<<20)
 	numBytes := int64(0)
 
 	for {
-		n, err := reader.Read(data)
+		n, err := r.Body.Read(data)
 		if err != nil {
+			fmt.Println(err)
 			break
 		}
 
-		// fmt.Println(string(data[:n]))
-
+		//fmt.Println(string(data[:n]))
 		numBytes += int64(n)
 	}
 
 	log.Printf("Recieved bytes: %d\n", numBytes)
+	fmt.Fprintf(w, "Upload successful")
 }
 
 func main() {
 	http.HandleFunc("/", upload)
-	http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
+	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }

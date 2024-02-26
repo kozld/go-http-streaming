@@ -1,0 +1,26 @@
+version: "3.3"
+
+networks:
+  default:
+
+services:
+  app:
+    build:
+      context: .
+    image: go-http-streaming
+    container_name: go-http-streaming
+    env_file:
+      - .env
+    volumes:
+      - ${PWD}/payload/:/tmp/payload
+    networks:
+      - default
+    deploy:
+      resources:
+        limits:
+          memory: 20M
+    command:
+      - "-filepath"
+      - "/tmp/payload/10GB.bin"
+    extra_hosts:
+      - host.docker.internal:host-gateway
