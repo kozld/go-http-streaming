@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -35,7 +34,6 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 	defer file.Close()
 
 	fileInfo, err := file.Stat()
@@ -43,7 +41,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	log.Printf("Filename: %s; Size: %d\n", fileInfo.Name(), fileInfo.Size())
+	log.Printf("File name: %s; File size: %d bytes\n", fileInfo.Name(), fileInfo.Size())
 
 	endpoint := defaultUploadHost
 	if uploadHost != "" {
@@ -51,6 +49,8 @@ func main() {
 	}
 
 	c := client.New(http.MethodPost, endpoint)
+
+	log.Println("Starting to upload file...")
 
 	startTime := time.Now()
 	resp, err := c.Send(file)
@@ -61,8 +61,7 @@ func main() {
 	}
 
 	executionTime := endTime.Sub(startTime)
-	log.Printf("Upload completed in %v\n", executionTime)
+	log.Printf("File upload completed in %v\n", executionTime)
 
-	bytes, _ := io.ReadAll(resp.Body)
-	fmt.Printf("Response: %s\n", string(bytes))
+	io.Copy(os.Stdout, resp.Body)
 }
