@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/kozld/go-http-streaming/client.go"
-	"github.com/kozld/go-http-streaming/client.go/testdata"
+	client "github.com/kozld/go-http-streaming"
+	"github.com/kozld/go-http-streaming/testdata"
 )
 
 type (

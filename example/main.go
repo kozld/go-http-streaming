@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/kozld/go-http-streaming/client.go"
+	client "github.com/kozld/go-http-streaming"
 )
 
 const (
