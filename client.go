@@ -127,6 +127,7 @@ func (c *Client) handleStream() {
 		}
 
 		c.closed = false
+		c.pr, c.pw = io.Pipe()
 	}
 }
 
