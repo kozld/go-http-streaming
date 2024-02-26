@@ -4,7 +4,7 @@ all: docker
 
 .PHONY: build
 build:
-	@ CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ${BUILD_DIR}/app ./examples/upload/upload.go
+	@ CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ${BUILD_DIR}/app ./cmd/main.go
 
 docker: stop
 	@ echo "Starting app in docker..."
